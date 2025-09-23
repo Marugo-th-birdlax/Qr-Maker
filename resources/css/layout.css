@@ -1,0 +1,76 @@
+#sidebar{
+  position:fixed; left:0; top:0; bottom:0; width:var(--sbw);
+  background:#fff; border-right:1px solid #e5e7eb;
+  transform:translateX(-100%); transition:transform .2s ease; z-index:40; overflow-y:auto;
+}
+body.sidebar-open #sidebar{ transform:translateX(0); }
+
+#sidebarBackdrop{
+  position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:30; display:none;
+}
+body.sidebar-open #sidebarBackdrop{ display:block; }
+@media (min-width:1024px){ #sidebarBackdrop{ display:none !important; } }
+
+/* ###################################### slidbar ################################### */
+
+:root{ --frs-sbw:260px; --frs-sbw-mini:72px; --frs-brand:#4f46e5; --frs-text:#111827; --frs-muted:#6b7280; }
+
+/* Sidebar */
+.frs-sidebar{
+  position:fixed; left:0; top:0; bottom:0; width:var(--frs-sbw);
+  background:#fff; border-right:1px solid #e5e7eb;
+  transform:translateX(-100%); transition:transform .2s ease;
+  overflow-y:auto; z-index:40;
+}
+body.sidebar-open .frs-sidebar{ transform:translateX(0); }
+@media (min-width:1024px){ .frs-sidebar{ transform:translateX(0); } }
+
+/* Header ของ sidebar */
+.frs-sidebar__header{ padding:14px 16px; font-weight:700; border-bottom:1px solid #e5e7eb; }
+
+/* รายการเมนู */
+.frs-menu{ padding:8px; font-size:14px; }
+.frs-menu__section{ margin:10px 6px 4px; color:var(--frs-muted); font-size:11px; text-transform:uppercase; font-weight:600; }
+.frs-menu__item{
+  display:flex; align-items:center; gap:10px; padding:8px 10px; margin:2px 6px;
+  border-radius:12px; color:var(--frs-text); text-decoration:none; position:relative;
+}
+.frs-menu__item:hover{ background:#f3f4f6; }
+.frs-menu__item.is-active{ background:#eef2ff; color:#3730a3; font-weight:600; }
+.frs-menu__item.is-active::before{
+  content:''; position:absolute; left:-6px; top:6px; bottom:6px; width:3px; background:var(--frs-brand); border-radius:2px;
+}
+.frs-menu__item.is-disabled{ color:#cbd5e1; cursor:not-allowed; }
+.frs-menu__item.is-disabled svg{ opacity:.35; }
+.frs-menu__icon svg{ width:18px; height:18px; stroke:#6b7280; }
+.frs-menu__item.is-active .frs-menu__icon svg{ stroke:currentColor; }
+
+/* ป้ายตัวเลข */
+.frs-badge{
+  margin-left:auto; display:inline-flex; min-width:20px; height:20px; padding:0 6px;
+  border-radius:999px; background:#fee2e2; color:#991b1b; font-size:11px; font-weight:700; align-items:center; justify-content:center;
+}
+
+/* Backdrop สำหรับ mobile */
+#sidebarBackdrop{ position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:30; display:none; }
+body.sidebar-open #sidebarBackdrop{ display:block; }
+@media (min-width:1024px){ #sidebarBackdrop{ display:none !important; } }
+
+/* ดันเนื้อหาให้หลบ sidebar บน Desktop */
+@media (min-width:1024px){
+  body .main_wrap, body .main-wrap{ margin-left: var(--frs-sbw); }
+  body.sidebar-mini .main_wrap, body.sidebar-mini .main-wrap{ margin-left: var(--frs-sbw-mini); }
+}
+body.sidebar-open .main_wrap, body.sidebar-open .main-wrap{ margin-left: var(--frs-sbw); }
+
+/* ############################# ราคาง ############################ */
+:root{
+  --fc-border-color: #e5e7eb;
+  --fc-button-bg-color: #4f46e5;
+  --fc-button-text-color: #fff;
+  --fc-today-bg-color: #eef2ff;
+}
+
+
+
+

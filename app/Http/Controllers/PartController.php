@@ -62,7 +62,7 @@ class PartController extends Controller
     {
         $req->validate([
             'file' => ['required','file','mimes:csv,txt'],
-            'date_format' => ['nullable','in:Y-m-d,d/m/Y,m/d-Y,d-m-Y,m-d-Y']
+            'date_format' => ['nullable','in:Y-m-d,Y/m/d,d/m/Y,m/d/Y,d-m-Y,m-d-Y']
         ]);
 
         $file = $req->file('file')->getRealPath();
@@ -278,25 +278,25 @@ class PartController extends Controller
         }
         return null;
     }
-
+    
     private function parseDateFlexible(?string $raw, ?string $preferred)
     {
         if (!$raw) return null;
 
-        // ถ้าผู้ใช้ระบุรูปแบบมา
         if ($preferred) {
-            try { return Carbon::createFromFormat($preferred, $raw); } catch (\Throwable $e) {}
+            try { return \Carbon\Carbon::createFromFormat($preferred, $raw); } catch (\Throwable $e) {}
         }
 
-        // เดารูปแบบทั่วไป
-        $candidates = ['Y-m-d','d/m/Y','m/d/Y','d-m-Y','m-d-Y'];
+        // เรียงให้ Y/m/d มาก่อน
+        $candidates = ['Y/m/d','Y-m-d','d/m/Y','m/d/Y','d-m-Y','m-d-Y'];
         foreach ($candidates as $fmt) {
-            try { return Carbon::createFromFormat($fmt, $raw); } catch (\Throwable $e) {}
+            try { return \Carbon\Carbon::createFromFormat($fmt, $raw); } catch (\Throwable $e) {}
         }
 
-        // ปล่อยให้ Carbon เดา (อาจผิดได้ถ้าข้อมูลกำกวม)
-        try { return Carbon::parse($raw); } catch (\Throwable $e) { return null; }
+        try { return \Carbon\Carbon::parse($raw); } catch (\Throwable $e) { return null; }
     }
+
+
 
     public function edit(Part $part)
     {

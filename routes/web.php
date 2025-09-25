@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PartController;
 use App\Http\Controllers\QrController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ReportsController;
 
 Route::get('/login',  [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt'); // << สำคัญ
@@ -22,6 +23,12 @@ Route::get('/qr/print/single', [QrController::class,'printSingle'])->name('qr.pr
 Route::post('/qr/print/bulk',  [QrController::class,'printBulk'])->name('qr.print.bulk');     // ids[] + copies_per_item
 Route::get('parts/qr/bulk',  [QrController::class,'bulkView'])->name('parts.qr.bulk.view');
 
+
+Route::prefix('reports')->group(function () {
+    Route::get('/',            [ReportsController::class, 'index'])->name('reports.index');
+    Route::get('/export/xlsx', [ReportsController::class, 'exportXlsx'])->name('reports.export.xlsx');
+});
+
 Route::prefix('parts')->name('parts.')->group(function () {
     Route::get('/',            [PartController::class,'index'])->name('index');
 
@@ -37,6 +44,7 @@ Route::prefix('parts')->name('parts.')->group(function () {
     Route::post('/qr/bulk',    [App\Http\Controllers\QrController::class,'bulkFromIds'])->name('qr.bulk');
     Route::get('{part}/qr',    [App\Http\Controllers\QrController::class,'showForPart'])->name('qr.show');
 });
+
 
 
 // Route::middleware('auth.session')->group(function () {

@@ -19,7 +19,11 @@ class HomeController extends Controller
             'today_import'   => Part::whereDate('created_at', today())->count(),
         ];
 
-        $recent = Part::latest('created_at')->limit(5)->get();
+        // ดึงชิ้นส่วนล่าสุด 8 รายการ (เลือกเฉพาะคอลัมน์ที่ใช้)
+        $recent = Part::select('id','part_no','part_name','supplier_code','supplier_name','created_at')
+            ->latest('created_at')
+            ->limit(8)
+            ->get();
 
         return view('home.index', compact('stats','recent'));
     }

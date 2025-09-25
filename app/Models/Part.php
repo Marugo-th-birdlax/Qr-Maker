@@ -15,6 +15,7 @@ class Part extends Model
     ];
 
     protected $casts = [
+    'date'        => 'datetime',
     'qty_per_box' => 'integer',
     'moq'        => 'integer',
     ];

@@ -18,7 +18,7 @@
   <div class="card" style="margin-bottom:14px;">
     <form method="get" style="display:flex; gap:12px; align-items:end; flex-wrap:wrap;">
       <div>
-        <label>ค้นหา</label><br>
+        <label>search</label><br>
         <input type="text" name="q" value="{{ request('q') }}" placeholder="Part No / Name / Supplier..."
                style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; width:260px;">
       </div>
@@ -26,7 +26,7 @@
       <div>
         <label>Supplier Code</label><br>
         <select name="supplier_code" style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; min-width:160px;">
-          <option value="">— ทั้งหมด —</option>
+          <option value="">— All —</option>
           @foreach ($supplierCodes as $c)
             <option value="{{ $c }}" @selected(request('supplier_code')===$c)>{{ $c }}</option>
           @endforeach
@@ -37,7 +37,7 @@
       <div>
         <label>TYPE</label><br>
         <select name="type" style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; min-width:140px;">
-          <option value="">— ทั้งหมด —</option>
+          <option value="">— All —</option>
           @foreach (($types ?? []) as $t)
             <option value="{{ $t }}" @selected(request('type')===$t)>{{ $t }}</option>
           @endforeach
@@ -47,7 +47,7 @@
       <div>
         <label>SUPPLIER (กลุ่ม)</label><br>
         <select name="supplier" style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; min-width:160px;">
-          <option value="">— ทั้งหมด —</option>
+          <option value="">— All —</option>
           @foreach (($suppliers ?? []) as $s)
             <option value="{{ $s }}" @selected(request('supplier')===$s)>{{ $s }}</option>
           @endforeach
@@ -57,7 +57,7 @@
       <div>
         <label>Location</label><br>
         <select name="location" style="padding:8px; border:1px solid #e5e7eb; border-radius:8px; min-width:140px;">
-          <option value="">— ทั้งหมด —</option>
+          <option value="">— All —</option>
           @foreach (($locations ?? []) as $l)
             <option value="{{ $l }}" @selected(request('location')===$l)>{{ $l }}</option>
           @endforeach
@@ -67,10 +67,10 @@
       <div style="flex:1"></div>
 
       <div>
-        <button class="btn" style="padding:8px 12px; border-radius:8px; background:#4f46e5; color:#fff; border:0;">ค้นหา</button>
+        <button class="btn" style="padding:8px 12px; border-radius:8px; background:#4f46e5; color:#fff; border:0;">search</button>
 
         @if ($canEdit)
-          <a href="{{ route('parts.import.form') }}" style="margin-left:8px; padding:8px 12px; border-radius:8px; background:#10b981; color:#fff; text-decoration:none;">นำเข้า CSV</a>
+          <a href="{{ route('parts.import.form') }}" style="margin-left:8px; padding:8px 12px; border-radius:8px; background:#10b981; color:#fff; text-decoration:none;">Import CSV</a>
         @endif
       </div>
     </form>
@@ -153,7 +153,7 @@
               <td style="padding:8px;">
                 @if ($canEdit)
                   <a href="{{ route('parts.edit', $p) }}" class="btn" style="padding:6px 10px; border-radius:8px; background:#2563eb; color:#fff; text-decoration:none;">
-                    แก้ไข
+                    Edit
                   </a>
                 @else
                   <span style="color:#9ca3af;">—</span>
@@ -172,14 +172,14 @@
 
       <div style="display:flex; gap:8px; align-items:center;">
         <button type="submit" class="btn" style="padding:8px 12px; border-radius:8px; background:#10b981; color:#fff; border:0;">
-          Generate QR (หลายรายการ)
+          Generate QR (multiple items)
         </button>
       </div>
     </div>
   </form>
 
   <script>
-    // เลือกทั้งหมด / ยกเลิกทั้งหมด
+    // เลือกAll / ยกเลิกAll
     const all = document.getElementById('chk-all');
     const rows = document.querySelectorAll('.chk-row');
     all?.addEventListener('change', () => rows.forEach(ch => ch.checked = all.checked));

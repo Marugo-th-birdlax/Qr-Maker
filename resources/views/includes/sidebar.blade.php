@@ -12,7 +12,6 @@
     $pendingCount = $pendingCount ?? 0; // ถ้าอยากแสดง badge ให้เมนูใด ๆ
 
     $menus = [
-        ['label'=>'QR Codes', 'route'=>'qr.index',      'patterns'=>['qr.*'],      'icon'=>'#', 'badge'=>null],
         ['label'=>'Parts',    'route'=>'parts.index',   'patterns'=>['parts.*'],   'icon'=>'#', 'badge'=>null],
         ['label'=>'Reports',  'route'=>'reports.index', 'patterns'=>['reports.*'], 'icon'=>'#', 'badge'=>$pendingCount > 0 ? $pendingCount : null],
         ['label'=>'Settings', 'route'=>'settings.index','patterns'=>['settings.*'],'icon'=>'#', 'badge'=>null],

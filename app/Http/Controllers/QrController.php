@@ -145,6 +145,8 @@ class QrController extends Controller
     {
         $payload = $this->buildPayload($p);
         $svg = QrCode::format('svg')->size(260)->margin(0)->generate($payload); // size พอดีกับบัตร 8 ชิ้น/หน้า
+        // $svg = QrCode::format('svg')->size(240)->margin(0)->generate($payload);
+
         // ข้อมูลด้านขวา (ปรับข้อความตามต้องการ)
         $info = [
             'Part No' => $p->part_no,
@@ -170,7 +172,7 @@ class QrController extends Controller
             'copies'  => ['nullable','integer','min:1','max:999'],
         ]);
 
-        $copies = (int)($data['copies'] ?? 8);
+        $copies = (int)($data['copies'] ?? 10);
         $part   = Part::findOrFail($data['part_id']);
 
         $item   = $this->makeItemFromPart($part);
@@ -180,44 +182,51 @@ class QrController extends Controller
         return view('qr.print_a4', [
             'title'     => "Print A4 — {$part->part_no}",
             'items'     => $items,
-            'per_page'  => 8,
+            'per_page'  => 10,
         ]);
     }
 
     public function printBulk(Request $req)
     {
         $data = $req->validate([
-            'qty'      => ['required','array'],                // qty[<part_id>] => จำนวน
-            'qty.*'    => ['nullable','integer','min:0','max:999'],
+            'qty'   => ['required','array'],
+            'qty.*' => ['nullable','integer','min:0','max:999'],
         ]);
 
-        // กรองเอาเฉพาะรายการที่ qty > 0
         $qtyMap = collect($data['qty'] ?? [])
             ->filter(fn($v) => is_numeric($v) && (int)$v > 0)
             ->map(fn($v) => (int)$v);
 
         if ($qtyMap->isEmpty()) {
-            return back()->withErrors(['qty' => 'กรุณากำหนดจำนวนอย่างน้อย 1 ชิ้น'])->withInput();
+            return back()->withErrors(['qty'=>'กรุณากำหนดจำนวนอย่างน้อย 1 ชิ้น'])->withInput();
         }
 
-        $partIds = $qtyMap->keys()->all();
-        $parts   = Part::whereIn('id', $partIds)->get()->keyBy('id');
+        $parts = \App\Models\Part::whereIn('id', $qtyMap->keys())->get()->keyBy('id');
 
-        $items = [];
+        $perPage = 10; // <<<<<< ใช้ 10 ชิ้น/หน้า เสมอ
+        $pages   = [];
+
         foreach ($qtyMap as $pid => $count) {
             $p = $parts[$pid] ?? null;
             if (!$p) continue;
+
             $item = $this->makeItemFromPart($p);
-            for ($i=0; $i<$count; $i++) {
-                $items[] = $item;
+
+            while ($count > 0) {
+                $take  = min($perPage, $count);
+                $cells = [];
+                for ($i=0; $i<$take; $i++) $cells[] = $item;
+                $pages[] = ['part'=>$p, 'cells'=>$cells];
+                $count  -= $take;
             }
         }
 
         return view('qr.print_a4', [
-            'title'     => "Print A4 — ".count($items)." ชิ้น",
-            'items'     => $items,
-            'per_page'  => 8,
+            'title'    => 'Print A4 — แยกหน้า/พาร์ท (10/หน้า)',
+            'pages'    => $pages,
+            'per_page' => $perPage,
         ]);
     }
+
     
 }

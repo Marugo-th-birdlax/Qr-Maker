@@ -68,14 +68,16 @@
             <a href="#" class="block px-3 py-2 text-sm hover:bg-gray-50">โปรไฟล์ (เร็วๆนี้)</a>
             <a href="#" class="block px-3 py-2 text-sm hover:bg-gray-50">ตั้งค่า (เร็วๆนี้)</a>
             @if(Route::has('logout'))
-              <form method="POST" action="#" class="border-t">
-                @csrf
-                <button type="submit" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-rose-600">ออกจากระบบ</button>
-              </form>
+          <form method="POST" action="{{ route('logout') }}" class="border-t">
+              @csrf
+              <button type="submit" class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-rose-600">
+                ออกจากระบบ
+              </button>
+          </form>
             @endif
           @else
             @if(Route::has('login'))
-              <a href="#" class="block px-3 py-2 text-sm hover:bg-gray-50">เข้าสู่ระบบ</a>
+              <a href="{{ route('login') }}" class="block px-3 py-2 text-sm hover:bg-gray-50">เข้าสู่ระบบ</a>
             @endif
           @endif
         </div>

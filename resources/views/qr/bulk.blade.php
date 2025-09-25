@@ -67,12 +67,8 @@
       </table>
     </div>
 
-    <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;">
-      <div style="display:flex; gap:8px; align-items:center;">
-        <label>ตั้งค่าทุกแถวเป็น:</label>
-        <input id="set-all-input" type="number" min="0" max="999" value="1" style="width:90px; padding:6px; border:1px solid #e5e7eb; border-radius:8px;">
-        <button type="button" class="btn" id="set-all-btn" style="padding:8px 12px; border-radius:8px; background:#e5e7eb; color:#111; border:0;">ตั้งค่าทุกแถว</button>
-      </div>
+    <div style="margin-top:10px; display:flex; gap:16px; align-items:center; justify-content:flex-end;">
+      <label><input type="radio" name="per_page" value="8" checked> 10 ชิ้น/หน้า</label>
 
       <button class="btn-primary" type="submit">พิมพ์</button>
     </div>

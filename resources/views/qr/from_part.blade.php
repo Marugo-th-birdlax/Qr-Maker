@@ -15,10 +15,10 @@
         <input type="hidden" name="part_id" value="{{ $part->id }}">
         <div>
           <label>จำนวนแผ่นงาน (ชิ้น)</label>
-          <input type="number" min="1" max="999" name="copies" value="8" class="i" style="width:120px;">
+          <input type="number" min="1" max="999" name="copies" value="10" class="i" style="width:120px;">
         </div>
-        <button class="btn-primary" type="submit">พิมพ์ A4 (8/หน้า)</button>
-        <div style="color:#64748b;">ระบบจะจัดเรียง 8 ชิ้นต่อหน้า อัตโนมัติ</div>
+        <button class="btn-primary" type="submit">พิมพ์</button>
+        <div style="color:#64748b;">ระบบจะจัดเรียง 10 ชิ้นต่อหน้า อัตโนมัติ</div>
       </form>
     </div>
 

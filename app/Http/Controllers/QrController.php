@@ -18,13 +18,12 @@ class QrController extends Controller
         $no = "0";
         $date = $p->date ? $p->date->format('Y/m/d') : '';
 
-        // รูปแบบ: No|Part No|Part Name|Supplier code|MOQ|Date(Y/m/d)
         return implode('|', [
             $no,    
             $p->part_no ?? '',
             $p->part_name ?? '',
             $p->supplier_code ?? '',
-            isset($p->moq) ? (string)$p->moq : '',
+            isset($p->qty_per_box) ? (string)$p->qty_per_box : '',
             $date,
         ]);
     }
@@ -128,7 +127,7 @@ class QrController extends Controller
                 $p->part_no ?? '',
                 $p->part_name ?? '',
                 $p->supplier_code ?? '',
-                $p->moq ?? '',
+                $p->qty_per_box  ?? '',
                 $date,
             ]);
             $svg = QrCode::format('svg')->size(140)->margin(0)->generate($payload);
@@ -143,26 +142,27 @@ class QrController extends Controller
 
     private function makeItemFromPart(Part $p): array
     {
-        $payload = $this->buildPayload($p);
-        $svg = QrCode::format('svg')->size(260)->margin(0)->generate($payload); // size พอดีกับบัตร 8 ชิ้น/หน้า
-        // $svg = QrCode::format('svg')->size(240)->margin(0)->generate($payload);
+        $payload = $this->buildPayload($p); // <- ภายใน buildPayload ใช้ qty_per_box แล้ว
+        $svg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(260)->margin(0)->generate($payload);
 
-        // ข้อมูลด้านขวา (ปรับข้อความตามต้องการ)
         $info = [
-            'Part No' => $p->part_no,
-            'Name'    => $p->part_name,
-            'Code'    => $p->supplier_code,
-            'MOQ'     => $p->moq,
-            'Date'    => $p->date ? $p->date->format('Y/m/d') : '',
+            'Part No'          => $p->part_no,
+            'Part Name'        => $p->part_name,
+            'Supplier Name'    => $p->supplier_name,
+            'Supplier : Code'  => trim(($p->supplier ? $p->supplier.' ' : '').($p->supplier_code ?? '')),
+            'Qty/Box'          => $p->qty_per_box,
+            'Date'             => $p->date ? $p->date->format('Y/m/d') : '',
         ];
+
         return [
-            'part'    => $p,
-            'payload' => $payload,
-            'svg'     => $svg,
-            'info'    => $info,
-            'filename'=> $p->part_no ?: ("qr_{$p->id}"),
+            'part'     => $p,
+            'payload'  => $payload,
+            'svg'      => $svg,
+            'info'     => $info,
+            'filename' => $p->part_no ?: ("qr_{$p->id}"),
         ];
     }
+
 
     // ==== ใหม่: Print A4 (8 ชิ้น/หน้า) - Part เดี่ยว ====
     public function printSingle(Request $req)

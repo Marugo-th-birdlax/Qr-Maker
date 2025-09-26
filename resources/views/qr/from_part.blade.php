@@ -1,4 +1,4 @@
-{{-- resources/views/qr/from_part.blade.php (ต่อยอดของเดิม) --}}
+{{-- resources/views/qr/from_part.blade.php --}}
 @extends('layouts.app')
 @section('title','QR Preview')
 
@@ -10,7 +10,6 @@
         {!! $svg !!}
       </div>
 
-      {{-- ปุ่มพิมพ์ A4 8 ชิ้น/หน้า --}}
       <form method="get" action="{{ route('qr.print.single') }}" style="margin-top:12px; display:flex; gap:8px; align-items:end; flex-wrap:wrap;">
         <input type="hidden" name="part_id" value="{{ $part->id }}">
         <div>
@@ -28,7 +27,6 @@
         {{ $payload }}
       </div>
 
-      {{-- ดาวน์โหลดไฟล์ (เดิม) --}}
       <form action="{{ route('qr.download') }}" method="post" style="margin-top:12px; display:flex; gap:8px; align-items:end; flex-wrap:wrap;">
         @csrf
         <input type="hidden" name="payload" value="{{ $payload }}">
@@ -46,16 +44,76 @@
         <button class="btn-primary" type="submit">ดาวน์โหลด</button>
       </form>
 
-      {{-- แสดงข้อมูลตัวหนังสือด้านขวา (ตัวอย่างเดียวกับที่จะไปอยู่ในแผ่นพิมพ์) --}}
-      <div style="margin-top:16px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px;">
-        <div><b>Part No:</b> {{ $part->part_no }}</div>
-        <div><b>Name:</b> {{ $part->part_name }}</div>
-        <div><b>Code:</b> {{ $part->supplier_code }}</div>
-        <div><b>MOQ:</b> {{ $part->moq }}</div>
-        <div><b>Date:</b> {{ optional($part->date)->format('Y/m/d') }}</div>
+      {{-- ===== ข้อมูลด้านขวา: หัวชื่อบริษัท + ตารางรายละเอียด ===== --}}
+      @php
+        $company = config('app.company_name', config('app.name'));
+      @endphp
+      <div class="info-card">
+        <div class="info-header">
+          <div class="company">{{ $company }}</div>
+          <div class="subtitle">Part Information</div>
+        </div>
+
+        <table class="info-table">
+          <tbody>
+            <tr>
+              <th>Part No</th>
+              <td>{{ $part->part_no }}</td>
+            </tr>
+            <tr>
+              <th>Name</th>
+              <td>{{ $part->part_name }}</td>
+            </tr>
+            <tr>
+              <th>Supplier Code</th>
+              <td>{{ $part->supplier_code }}</td>
+            </tr>
+            <tr>
+              <th>Qty/Box</th> {{-- เปลี่ยนจาก MOQ เป็น Qty/Box --}}
+              <td>{{ $part->qty_per_box }}</td>
+            </tr>
+            <tr>
+              <th>Date</th>
+              <td>{{ optional($part->date)->format('Y/m/d') }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+      {{-- ===== /จบส่วนข้อมูล ===== --}}
     </div>
   </div>
 
-  <style>.i{width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px}.btn-primary{padding:10px 14px; border-radius:10px; background:#4f46e5; color:#fff; border:0}</style>
+  <style>
+    .i{width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px}
+    .btn-primary{padding:10px 14px; border-radius:10px; background:#4f46e5; color:#fff; border:0}
+
+    .info-card{
+      margin-top:16px; background:#fff; border:1px solid #e5e7eb; border-radius:12px; overflow:hidden;
+    }
+    .info-header{
+      display:flex; align-items:baseline; justify-content:space-between;
+      padding:12px 14px; background:#f9fafb; border-bottom:1px solid #e5e7eb;
+    }
+    .info-header .company{
+      font-weight:700; font-size:18px; color:#111827;
+    }
+    .info-header .subtitle{
+      font-size:12px; color:#6b7280;
+    }
+    .info-table{
+      width:100%; border-collapse:collapse;
+    }
+    .info-table th{
+      width:180px; text-align:left; background:#f9fafb; color:#374151;
+      padding:10px 12px; border-bottom:1px solid #e5e7eb;
+    }
+    .info-table td{
+      padding:10px 12px; border-bottom:1px solid #e5e7eb; color:#111827;
+      word-break: break-word;
+    }
+    .info-table tr:last-child th,
+    .info-table tr:last-child td{
+      border-bottom:0;
+    }
+  </style>
 @endsection

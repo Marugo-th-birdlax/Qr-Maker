@@ -4,10 +4,13 @@
 
 @section('content')
 @php
-  $u = session('user'); 
+  $u = session('user');
   $role = $u['role'] ?? 'user';
+  $isAdmin = $role === 'admin';
   $canEdit = in_array($role, ['admin','manager'], true);
+  $canDelete = ($role === 'pc'); 
 @endphp
+
   @if (session('ok'))
     <div style="background:#ecfdf5; border:1px solid #a7f3d0; padding:10px; border-radius:10px; margin-bottom:10px;">
       {{ session('ok') }}
@@ -69,9 +72,15 @@
       <div>
         <button class="btn" style="padding:8px 12px; border-radius:8px; background:#4f46e5; color:#fff; border:0;">search</button>
 
-        @if ($canEdit)
-          <a href="{{ route('parts.import.form') }}" style="margin-left:8px; padding:8px 12px; border-radius:8px; background:#10b981; color:#fff; text-decoration:none;">Import CSV</a>
-        @endif
+      @if ($isAdmin)
+        <a href="{{ route('parts.create') }}" style="margin-left:8px; padding:8px 12px; border-radius:8px; background:#2563eb; color:#fff; text-decoration:none;">
+          เพิ่มข้อมูล
+        </a>
+        <a href="{{ route('parts.import.form') }}" style="margin-left:8px; padding:8px 12px; border-radius:8px; background:#10b981; color:#fff; text-decoration:none;">
+          Import CSV
+        </a>
+      @endif
+
       </div>
     </form>
   </div>
@@ -87,7 +96,7 @@
             <th style="padding:8px; width:36px;">
               <input type="checkbox" id="chk-all">
             </th>
-            <th style="text-align:left; padding:8px;">No</th>
+            {{-- <th style="text-align:left; padding:8px;">No</th> --}}
             <th style="text-align:left; padding:8px;">Part No</th>
             <th style="text-align:left; padding:8px;">Part Name</th>
 
@@ -120,7 +129,7 @@
                 <input type="checkbox" name="ids[]" value="{{ $p->id }}" class="chk-row">
               </td>
 
-              <td style="padding:8px;">{{ $p->no }}</td>
+              {{-- <td style="padding:8px;">{{ $p->no }}</td> --}}
               <td style="padding:8px; font-weight:600;">{{ $p->part_no }}</td>
               <td style="padding:8px;">{{ $p->part_name }}</td>
 
@@ -150,15 +159,36 @@
                 </a>
               </td>
 
-              <td style="padding:8px;">
-                @if ($canEdit)
-                  <a href="{{ route('parts.edit', $p) }}" class="btn" style="padding:6px 10px; border-radius:8px; background:#2563eb; color:#fff; text-decoration:none;">
-                    Edit
-                  </a>
-                @else
-                  <span style="color:#9ca3af;">—</span>
-                @endif
-              </td>
+          <td style="padding:8px;">
+            @if ($canEdit)
+              <a href="{{ route('parts.edit', $p) }}" class="btn" style="padding:6px 10px; border-radius:8px; background:#2563eb; color:#fff; text-decoration:none;">
+                Edit
+              </a>
+            @else
+              
+            @endif
+
+            @if ($canDelete)
+              {{-- ✅ ไปหน้า confirm ลบ (จำกัดสิทธิ์ด้วย middleware require.role:pc) --}}
+              <a href="{{ route('parts.delete.confirm', $p) }}"
+                class="btn"
+                style="padding:6px 10px; border-radius:8px; background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; text-decoration:none;">
+                ลบ
+              </a>
+
+              {{--
+              🧰 ออปชัน: “ลบเร็ว” ไม่ผ่านหน้า confirm (ใช้แทนลิงก์ด้านบนได้ถ้าต้องการ)
+              <form action="{{ route('parts.destroy', $p) }}" method="post" style="display:inline"
+                    onsubmit="return confirm('ยืนยันลบ {{ $p->part_no }} ?');">
+                @csrf
+                @method('DELETE')
+                <button class="btn" style="padding:6px 10px; border-radius:8px; background:#ef4444; color:#fff; border:0;">
+                  ลบ
+                </button>
+              </form>
+              --}}
+            @endif
+          </td>
             </tr>
           @empty
             <tr><td colspan="18" style="padding:12px; color:#6b7280;">ยังไม่มีข้อมูล</td></tr>

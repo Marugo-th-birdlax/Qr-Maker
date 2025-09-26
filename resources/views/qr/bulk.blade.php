@@ -19,7 +19,7 @@
             <th style="text-align:left; padding:8px; min-width:200px;">Part No</th>
             <th style="text-align:left; padding:8px;">Name</th>
             <th style="text-align:left; padding:8px;">Code</th>
-            <th style="text-align:right; padding:8px;">MOQ</th>
+            <th style="text-align:right; padding:8px;">Qty/Box</th> {{-- เปลี่ยนหัวตาราง --}}
             <th style="text-align:left; padding:8px;">Date</th>
             <th style="text-align:center; padding:8px; width:180px;">จำนวน</th>
             <th style="text-align:center; padding:8px; width:120px;">ตัวอย่าง</th>
@@ -32,7 +32,7 @@
               <td style="padding:8px; font-weight:600;">{{ $p->part_no }}</td>
               <td style="padding:8px;">{{ $p->part_name }}</td>
               <td style="padding:8px;">{{ $p->supplier_code }}</td>
-              <td style="padding:8px; text-align:right;">{{ $p->moq }}</td>
+              <td style="padding:8px; text-align:right;">{{ $p->qty_per_box }}</td> {{-- ใช้ qty_per_box --}}
               <td style="padding:8px;">{{ optional($p->date)->format('Y/m/d') }}</td>
               <td style="padding:8px; text-align:center;">
                 <div style="display:inline-flex; gap:6px; align-items:center;">
@@ -50,7 +50,6 @@
                 </div>
               </td>
               <td style="padding:8px; text-align:center;">
-                {{-- ฉีด style width/height เข้าไปที่แท็ก <svg> โดยตรง --}}
                 @php
                   $thumbSvg = isset($it['svg'])
                     ? str_replace('<svg', '<svg style="width:64px; height:64px;"', $it['svg'])
@@ -68,8 +67,8 @@
     </div>
 
     <div style="margin-top:10px; display:flex; gap:16px; align-items:center; justify-content:flex-end;">
-      <label><input type="radio" name="per_page" value="8" checked> 10 ชิ้น/หน้า</label>
-
+      {{-- ให้ค่าตรงกับข้อความ (10 ชิ้น/หน้า) --}}
+      <label><input type="radio" name="per_page" value="10" checked> 10 ชิ้น/หน้า</label>
       <button class="btn-primary" type="submit">พิมพ์</button>
     </div>
   </form>
@@ -98,7 +97,7 @@
       });
     });
 
-    // ตั้งค่าทุกแถว
+    // ตั้งค่าทุกแถว (ถ้ามีปุ่ม set-all)
     document.getElementById('set-all-btn')?.addEventListener('click', () => {
       const v = parseInt(document.getElementById('set-all-input').value || '0', 10);
       document.querySelectorAll('input[name^="qty["]').forEach(inp => {

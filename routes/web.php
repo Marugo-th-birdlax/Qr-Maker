@@ -30,28 +30,34 @@ Route::prefix('reports')->group(function () {
 });
 
 Route::prefix('parts')->name('parts.')->group(function () {
-    Route::get('/',            [PartController::class,'index'])->name('index');
+    Route::get('/', [PartController::class,'index'])->name('index');
 
+     // ── QR
+    Route::post('qr/bulk', [App\Http\Controllers\QrController::class,'bulkFromIds'])->name('qr.bulk');
+    Route::get('{part}/qr', [App\Http\Controllers\QrController::class,'showForPart'])->name('qr.show');
+
+    // ── Edit/Update: admin, manager
     Route::middleware(['auth.session','role:admin,manager'])->group(function () {
-        Route::get('/import',  [PartController::class,'createImport'])->name('import.form');
-        Route::post('/import', [PartController::class,'storeImport'])->name('import.store');
-
-        Route::get('{part}/edit',  [PartController::class,'edit'])->name('edit');
-        Route::put('{part}',       [PartController::class,'update'])->name('update');
+        Route::get('{part}/edit', [PartController::class,'edit'])->name('edit');
+        Route::put('{part}',      [PartController::class,'update'])->name('update');
     });
-    
 
-    Route::post('/qr/bulk',    [App\Http\Controllers\QrController::class,'bulkFromIds'])->name('qr.bulk');
-    Route::get('{part}/qr',    [App\Http\Controllers\QrController::class,'showForPart'])->name('qr.show');
+   // ── Create/Import: admin
+    Route::middleware(['auth.session','role:admin'])->group(function () {
+        Route::get('import', [PartController::class,'createImport'])->name('import.form');
+        Route::post('import', [PartController::class,'storeImport'])->name('import.store');
+
+        // ✅ แก้ตรงนี้ ไม่ต้องมี /parts ซ้ำ
+        Route::get('create', [PartController::class, 'create'])->name('create');
+        Route::post('/',     [PartController::class, 'store'])->name('store');
+
+    });
+
+        // ── Delete: pc only
+    Route::middleware(['auth.session','role:pc'])->group(function () {
+        Route::get('{part}/delete', [PartController::class,'deleteConfirm'])
+            ->name('delete.confirm')->whereNumber('part');
+        Route::delete('{part}', [PartController::class,'destroy'])
+            ->name('destroy')->whereNumber('part');
+    });
 });
-
-
-
-// Route::middleware('auth.session')->group(function () {
-
-
-//         // เฉพาะ admin/manager
-//     Route::middleware('role:admin,manager')->group(function () {
-//         Route::get('/admin/users', fn() => 'manage users')->name('admin.users');
-//     });
-// });

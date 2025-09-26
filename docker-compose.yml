@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: qr-laravel-app:latest       # ใช้ tag ใหม่ของโปรเจกต์นี้
+    container_name: qr-laravel         # ชื่อคอนเทนเนอร์คนละชื่อ
+    restart: unless-stopped
+    ports:
+      - "8001:80"                      # พอร์ตใหม่ (ของเดิมใช้ 8000 แล้ว)
+    environment:
+      TZ: Asia/Bangkok
+      APP_ENV: local
+      APP_DEBUG: "true"
+      COMPOSER_ALLOW_SUPERUSER: "1"
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html               # แม็พซอร์สโค้ดเข้าคอนเทนเนอร์
+      - app_node_modules:/var/www/html/node_modules
+    networks:
+      - app_net                        # ใช้เน็ตเวิร์คเดิม หรือ bridge ก็ได้
+
+volumes:
+  app_node_modules:
+
+networks:
+  app_net:
+    external: true                     # ถ้ามี network นี้อยู่แล้ว (เหมือนตัวอย่างของเดิม)
+    # ถ้าไม่มี ให้สร้างก่อน: docker network create app_net

@@ -90,7 +90,7 @@
       <table style="width:100%; border-collapse:collapse; min-width:1200px;">
         <thead>
           <tr style="background:#f3f4f6;">
-            <th style="text-align:left; padding:8px;">No</th>
+            {{-- <th style="text-align:left; padding:8px;">No</th> --}}
             <th style="text-align:left; padding:8px;">PIC</th>
             <th style="text-align:left; padding:8px;">TYPE</th>
             <th style="text-align:left; padding:8px;">SUPPLIER (กลุ่ม)</th>
@@ -110,7 +110,7 @@
         <tbody>
           @forelse ($parts as $p)
             <tr style="border-top:1px solid #e5e7eb;">
-              <td style="padding:8px;">{{ $p->no }}</td>
+              {{-- <td style="padding:8px;">{{ $p->no }}</td> --}}
               <td style="padding:8px;">{{ $p->pic }}</td>
               <td style="padding:8px;">{{ $p->type }}</td>
               <td style="padding:8px;">{{ $p->supplier }}</td>

@@ -339,4 +339,76 @@ class PartController extends Controller
             ->with('ok', 'บันทึกการแก้ไขเรียบร้อย');
     }
 
+
+    ########################################################## Create Part#############
+
+    public function create()
+    {
+        return view('parts.create');
+    }
+
+    public function store(\Illuminate\Http\Request $req)
+    {
+        $data = $req->validate([
+
+            'part_no'        => ['required','string','max:255'],
+            'part_name'      => ['required','string','max:255'],
+            'supplier_name'  => ['nullable','string','max:255'],
+            'supplier_code'  => ['nullable','string','max:255'],
+            'pic'            => ['nullable','string','max:255'],
+            'type'           => ['nullable','string','max:100'],
+            'supplier'       => ['nullable','string','max:100'],
+            'location'       => ['nullable','string','max:255'],
+            'qty_per_box'    => ['nullable','integer','min:0'],
+            'remark'         => ['nullable','string','max:500'],
+            'item_no'        => ['nullable','string','max:100'],
+            'unit'           => ['nullable','string','max:50'],
+            'moq'            => ['nullable','integer','min:0'],
+            'date'           => ['nullable','string','max:20'], // รับเป็นสตริงก่อน
+        ]);
+        $data['no'] = 0;
+        
+        // แปลงวันที่ -> date (รองรับทั้ง Y/m/d และ Y-m-d)
+        if (!empty($data['date'])) {
+            try {
+                $data['date'] = \Carbon\Carbon::createFromFormat('Y/m/d', $data['date'])->format('Y-m-d');
+            } catch (\Throwable $e) {
+                try {
+                    $data['date'] = \Carbon\Carbon::createFromFormat('Y-m-d', $data['date'])->format('Y-m-d');
+                } catch (\Throwable $e2) {
+                    $data['date'] = null;
+                }
+            }
+        }
+
+        \App\Models\Part::create($data);
+
+        return redirect()->route('parts.index')->with('ok', 'เพิ่มข้อมูลเรียบร้อยแล้ว');
+    }
+
+
+    public function __construct()
+    {
+        $this->middleware('role:pc')->only(['destroy','deleteConfirm']);
+    }
+
+
+    public function deleteConfirm(Part $part)
+    {
+        return view('parts.delete', compact('part'));
+    }
+
+    public function destroy(Request $request, Part $part)
+    {
+        try {
+            $part->delete(); // ลบจริง (hard delete)
+            return redirect()->route('parts.index')->with('ok', 'ลบรายการเรียบร้อย');
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors('ลบไม่ได้: ข้อมูลอาจถูกอ้างอิงอยู่หรือเกิดข้อผิดพลาด');
+        }
+    }
+
+
+
 }

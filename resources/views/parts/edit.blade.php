@@ -34,6 +34,32 @@
     .btn-ghost { background:#fff; }
     .sec-title { font-size:12px; color:#6b7280; letter-spacing:.02em; text-transform:uppercase; margin-bottom:6px; }
     .muted     { color:#6b7280; font-size:12px; }
+
+    .inp:not([disabled]):not([readonly]),
+    .sel:not([disabled]),
+    .txt:not([readonly]) {
+      background:#ecfdf5;              /* เขียวอ่อน */
+      border-color:#34d399;            /* เขียวกลาง */
+    }
+
+    /* โทนตอนโฟกัส */
+    .inp:not([disabled]):not([readonly]):focus,
+    .sel:not([disabled]):focus,
+    .txt:not([readonly]):focus {
+      outline: none;
+      border-color:#10b981;            /* เขียวเข้มขึ้น */
+      box-shadow:0 0 0 3px rgba(16,185,129,.2);
+    }
+
+    /* เทาให้ฟิลด์อ่านอย่างเดียว/ปิดการแก้ไข */
+    .inp[readonly], .txt[readonly],
+    .inp[disabled], .sel[disabled], .txt[disabled]{
+      background:#f9fafb;
+      color:#6b7280;
+      border-color:#e5e7eb;
+      box-shadow:none;
+    }
+    
     @media (max-width: 768px) {
       .grid2, .grid3 { grid-template-columns: 1fr; }
       .wrap { padding: 0 8px; }
@@ -72,11 +98,11 @@
           </summary>
           <div class="grp-body">
             <div class="grid3">
-              <div>
+              {{-- <div>
                 <label class="lbl">No</label>
                 <input class="inp" name="no" value="{{ old('no',$part->no) }}"{!! $ro !!}>
                 
-              </div>
+              </div> --}}
               <div>
                 <label class="lbl">Part No (อ่านอย่างเดียว)</label>
                 <input class="inp" value="{{ $part->part_no }}" disabled>

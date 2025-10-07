@@ -76,7 +76,7 @@
         @php
           $u = session('user');
           $role = $u['role'] ?? 'user';
-          $canEdit = in_array($role, ['admin','manager'], true);
+          $canEdit = in_array($role, ['admin','pp','qc'], true);
         @endphp
 
         @forelse ($recent as $p)

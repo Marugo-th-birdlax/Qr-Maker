@@ -37,13 +37,16 @@ Route::prefix('parts')->name('parts.')->group(function () {
     Route::get('{part}/qr', [App\Http\Controllers\QrController::class,'showForPart'])->name('qr.show');
 
     // ── Edit/Update: admin, manager
-    Route::middleware(['auth.session','role:admin,manager'])->group(function () {
-        Route::get('{part}/edit', [PartController::class,'edit'])->name('edit');
-        Route::put('{part}',      [PartController::class,'update'])->name('update');
+    Route::middleware(['auth.session','role:admin,pp,qc'])->group(function () {
+        Route::get('{part}/edit',       [PartController::class,'edit'])->name('edit')->whereNumber('part');
+        Route::put('{part}',            [PartController::class,'update'])->name('update')->whereNumber('part');
+        Route::patch('{part}/activate', [PartController::class,'activate'])->name('activate')->whereNumber('part');
+        Route::patch('{part}/deactivate',[PartController::class,'deactivate'])->name('deactivate')->whereNumber('part');
+        Route::get('{part}/history',    [PartController::class,'history'])->name('history')->whereNumber('part');
     });
 
    // ── Create/Import: admin
-    Route::middleware(['auth.session','role:admin'])->group(function () {
+    Route::middleware(['auth.session','role:admin,pp'])->group(function () {
         Route::get('import', [PartController::class,'createImport'])->name('import.form');
         Route::post('import', [PartController::class,'storeImport'])->name('import.store');
 
@@ -54,10 +57,17 @@ Route::prefix('parts')->name('parts.')->group(function () {
     });
 
         // ── Delete: pc only
-    Route::middleware(['auth.session','role:pc'])->group(function () {
+    Route::middleware(['auth.session','role:admin,pc'])->group(function () {
         Route::get('{part}/delete', [PartController::class,'deleteConfirm'])
             ->name('delete.confirm')->whereNumber('part');
         Route::delete('{part}', [PartController::class,'destroy'])
             ->name('destroy')->whereNumber('part');
     });
 });
+
+Route::prefix('settings')->name('settings.')->middleware(['auth.session','role:admin,pc'])->group(function () {
+    Route::get('/',                   [PartController::class,'settings'])->name('index');
+    Route::patch('trash/{id}/restore',[PartController::class,'restore'])->name('restore')->whereNumber('id');
+    Route::delete('trash/{id}/force', [PartController::class,'forceDelete'])->name('force')->whereNumber('id');
+});
+

@@ -1,5 +1,5 @@
 @php
-    // helper เช็ค active (กันประกาศซ้ำ)
+    // helper เดิม…
     if (!function_exists('frs_is_active')) {
         function frs_is_active($patterns) {
             foreach ((array) $patterns as $p) {
@@ -9,14 +9,24 @@
         }
     }
 
-    $pendingCount = $pendingCount ?? 0; // ถ้าอยากแสดง badge ให้เมนูใด ๆ
+    $u    = session('user');
+    $role = data_get($u, 'role', 'user');
+    $canSeeSettings = in_array($role, ['admin','pc'], true);
 
+    $pendingCount = $pendingCount ?? 0;
+
+    // เมนูพื้นฐาน (ทุกคนเห็น)
     $menus = [
-        ['label'=>'Parts',    'route'=>'parts.index',   'patterns'=>['parts.*'],   'icon'=>'#', 'badge'=>null],
-        ['label'=>'Reports',  'route'=>'reports.index', 'patterns'=>['reports.*'], 'icon'=>'#', 'badge'=>$pendingCount > 0 ? $pendingCount : null],
-        ['label'=>'Settings', 'route'=>'settings.index','patterns'=>['settings.*'],'icon'=>'#', 'badge'=>null],
+        ['label'=>'Parts',   'route'=>'parts.index',   'patterns'=>['parts.*'],   'icon'=>'#', 'badge'=>null],
+        ['label'=>'Reports', 'route'=>'reports.index', 'patterns'=>['reports.*'], 'icon'=>'#', 'badge'=>$pendingCount > 0 ? $pendingCount : null],
     ];
+
+    // เพิ่ม Settings เฉพาะ admin/pc
+    if ($canSeeSettings) {
+        $menus[] = ['label'=>'Settings', 'route'=>'settings.index', 'patterns'=>['settings.*'], 'icon'=>'#', 'badge'=>null];
+    }
 @endphp
+
 
 <aside id="sidebar" class="frs-sidebar">
   <div class="frs-sidebar__header">เมนูระบบ</div>

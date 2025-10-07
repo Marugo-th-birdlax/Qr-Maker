@@ -6,9 +6,10 @@
 @php
   $u = session('user');
   $role = $u['role'] ?? 'user';
-  $isManager = $role === 'manager';
-  $ro = $isManager ? 'readonly' : '';          // สำหรับ input text
-  $dis = $isManager ? 'disabled' : '';         // สำหรับ select/disabled field
+  $isqc = $role === 'qc';
+  $ro  = $isqc ? 'readonly' : '';          // สำหรับ input text
+  $dis = $isqc ? 'disabled' : '';         // สำหรับ select/disabled field
+  $canToggle = in_array($role, ['admin','pp','qc'], true);
 @endphp
 
   <style>
@@ -81,10 +82,55 @@
     @endif
 
     <div class="card" style="padding:14px;">
-      <div class="row" style="justify-content:space-between; margin-bottom:6px;">
-        <div class="hd">แก้ไขข้อมูลชิ้นส่วน</div>
-        <div class="muted">Part No: <b>{{ $part->part_no }}</b></div>
-      </div>
+<div class="row" style="justify-content:space-between; margin-bottom:6px;">
+  <div class="hd">แก้ไขข้อมูลชิ้นส่วน</div>
+
+  <div style="display:flex; align-items:center; gap:8px;">
+    <div class="muted">Part No: <b>{{ $part->part_no }}</b></div>
+
+    {{-- สถานะ --}}
+    @if ($part->is_active)
+      <span style="padding:4px 8px; border-radius:999px; background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0; font-size:12px;">
+        Active
+      </span>
+    @else
+      <span style="padding:4px 8px; border-radius:999px; background:#f3f4f6; color:#374151; border:1px solid #e5e7eb; font-size:12px;">
+        Inactive
+      </span>
+    @endif
+
+    {{-- ปุ่มเปิด/ปิดการใช้งาน (admin, pp เท่านั้น) --}}
+    @if ($canToggle)
+      @if ($part->is_active)
+        <form action="{{ route('parts.deactivate', $part) }}" method="post"
+              onsubmit="return confirm('ปิดใช้งาน {{ $part->part_no }} ?');">
+          @csrf @method('PATCH')
+          <button type="submit"
+                  style="padding:6px 10px; border-radius:8px; background:#f59e0b; color:#111; border:0;">
+            ปิดใช้งาน
+          </button>
+        </form>
+      @else
+        <form action="{{ route('parts.activate', $part) }}" method="post"
+              onsubmit="return confirm('เปิดใช้งาน {{ $part->part_no }} ?');">
+          @csrf @method('PATCH')
+          <button type="submit"
+                  style="padding:6px 10px; border-radius:8px; background:#10b981; color:#fff; border:0;">
+            เปิดใช้งาน
+          </button>
+        </form>
+      @endif
+    @endif
+
+    {{-- ลิงก์ดูประวัติ --}}
+    <a href="{{ route('parts.history', $part) }}"
+       class="btn"
+       style="padding:6px 10px; border-radius:8px; border:1px solid #e5e7eb; text-decoration:none;">
+      ประวัติ
+    </a>
+  </div>
+</div>
+
 
       <form method="post" action="{{ route('parts.update', $part) }}">
         @csrf
@@ -206,3 +252,5 @@
     </div>
   </div>
 @endsection
+
+

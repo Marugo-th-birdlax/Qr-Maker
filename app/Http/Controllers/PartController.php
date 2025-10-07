@@ -6,9 +6,39 @@ use Illuminate\Http\Request;
 use App\Models\Part;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\PartHistory;        
+use Illuminate\Support\Arr;        
 
 class PartController extends Controller
 {
+
+    // ====== Audit config & helpers ======
+    protected array $auditFields = [
+        'no','pic','type','part_no','part_name','supplier_name','supplier_code',
+        'supplier','location','moq','qty_per_box','remark','item_no','unit','date',
+        'qr_payload','is_active','deactivated_at',
+    ];
+
+    protected function actorId(Request $request): ?int
+    {
+        // ถ้ามี user.id ใน session ให้คืนค่า (ถ้าไม่มี ก็คืน null)
+        return (int) data_get($request->session()->get('user'), 'id');
+    }
+
+    protected function logHistory(Part $part, ?int $userId, string $action, ?array $before, ?array $after, array $changedFields = [], ?string $note = null): void
+    {
+        PartHistory::create([
+            'part_id'        => $part->id,
+            'user_id'        => $userId,
+            'action'         => $action,           // create|update|delete|activate|deactivate
+            'before'         => $before,
+            'after'          => $after,
+            'changed_fields' => array_values($changedFields),
+            'note'           => $note,
+        ]);
+    }
+
+
     public function index(Request $req)
     {
         $q = Part::query();
@@ -36,6 +66,14 @@ class PartController extends Controller
         if ($loc = $req->get('location')) {
             $q->where('location', $loc);
         }
+        // แสดงเฉพาะที่เปิดใช้งานเป็นค่าเริ่มต้น (active=1|0|all)
+        $active = $req->get('active', '1');
+        if ($active === '1') {
+            $q->where('is_active', true);
+        } elseif ($active === '0') {
+            $q->where('is_active', false);
+        }
+
         // =============================
 
         $parts = $q->orderByDesc('id')->paginate(20)->withQueryString();
@@ -144,6 +182,7 @@ class PartController extends Controller
                     'date'          => $date,
                     'qr_payload'    => $payload,
                     'updated_at'    => now(),
+                    'is_active'     => true,   
                 ];
 
                 $existing = Part::where('part_no', $partNo)->first();
@@ -307,7 +346,7 @@ class PartController extends Controller
     {
         $role = data_get($req->session()->get('user'), 'role', 'user');
 
-        if ($role === 'manager') {
+        if ($role === 'pp') {
             // ให้แก้ได้เฉพาะ 2 ช่องนี้เท่านั้น
             $data = $req->validate([
                 'qty_per_box' => ['nullable','integer','min:0'],
@@ -331,12 +370,38 @@ class PartController extends Controller
                 'date'          => ['nullable','date'],
             ]);
         }
+        // เก็บประวัติ (แก้ไข)
+        
+        $beforeAll = Arr::only($part->getAttributes(), $this->auditFields);
 
-        $part->fill($data)->save();
+        $part->fill($data);
+        // ถ้ามีคอลัมน์ updated_by ให้ปลดคอมเมนต์บรรทัดด้านล่าง
+        // $part->updated_by = $this->actorId($req);
 
-        return redirect()
-            ->route('parts.index', $req->query())
-            ->with('ok', 'บันทึกการแก้ไขเรียบร้อย');
+        $dirty = array_intersect(array_keys($part->getDirty()), $this->auditFields);
+
+        if (count($dirty) === 0) {
+            $part->save(); // อัปเดต timestamp อย่างเดียว
+            return redirect()->route('parts.index', $req->query())->with('ok', 'ไม่มีการเปลี่ยนแปลง');
+        }
+
+        $part->save();
+
+        $afterAll   = Arr::only($part->fresh()->getAttributes(), $this->auditFields);
+        $beforeOnly = Arr::only($beforeAll, $dirty);
+        $afterOnly  = Arr::only($afterAll,  $dirty);
+
+        $this->logHistory(
+            $part,
+            $this->actorId($req),
+            'update',
+            $beforeOnly,
+            $afterOnly,
+            $dirty
+        );
+
+        return redirect()->route('parts.index', $req->query())->with('ok', 'บันทึกการแก้ไขเรียบร้อย');
+
     }
 
 
@@ -347,10 +412,9 @@ class PartController extends Controller
         return view('parts.create');
     }
 
-    public function store(\Illuminate\Http\Request $req)
+    public function store(Request $req)
     {
         $data = $req->validate([
-
             'part_no'        => ['required','string','max:255'],
             'part_name'      => ['required','string','max:255'],
             'supplier_name'  => ['nullable','string','max:255'],
@@ -366,9 +430,10 @@ class PartController extends Controller
             'moq'            => ['nullable','integer','min:0'],
             'date'           => ['nullable','string','max:20'], // รับเป็นสตริงก่อน
         ]);
+
         $data['no'] = 0;
-        
-        // แปลงวันที่ -> date (รองรับทั้ง Y/m/d และ Y-m-d)
+
+        // แปลงวันที่สตริง -> date (รองรับ Y/m/d และ Y-m-d)
         if (!empty($data['date'])) {
             try {
                 $data['date'] = \Carbon\Carbon::createFromFormat('Y/m/d', $data['date'])->format('Y-m-d');
@@ -381,16 +446,32 @@ class PartController extends Controller
             }
         }
 
-        \App\Models\Part::create($data);
+        // เปิดใช้งานทันที
+        $data['is_active'] = true;
+
+        $part = Part::create($data);
+
+        // บันทึกประวัติ (สร้าง)
+        $this->logHistory(
+            $part,
+            $this->actorId($req),
+            'create',
+            null,
+            Arr::only($part->fresh()->toArray(), $this->auditFields),
+            $this->auditFields
+        );
 
         return redirect()->route('parts.index')->with('ok', 'เพิ่มข้อมูลเรียบร้อยแล้ว');
     }
 
 
+
     public function __construct()
     {
-        $this->middleware('role:pc')->only(['destroy','deleteConfirm']);
+        // เดิม: $this->middleware('role:pc')->only(['destroy','deleteConfirm']);
+        $this->middleware('role:admin,pc')->only(['destroy','deleteConfirm']); // ✅
     }
+
 
 
     public function deleteConfirm(Part $part)
@@ -401,12 +482,150 @@ class PartController extends Controller
     public function destroy(Request $request, Part $part)
     {
         try {
+            $snapshot = Arr::only($part->getAttributes(), $this->auditFields);
+
             $part->delete(); // ลบจริง (hard delete)
+
+            $this->logHistory(
+                $part,
+                $this->actorId($request),
+                'delete',
+                $snapshot,
+                null,
+                array_keys($snapshot)
+            );
+
             return redirect()->route('parts.index')->with('ok', 'ลบรายการเรียบร้อย');
         } catch (\Throwable $e) {
             report($e);
             return back()->withErrors('ลบไม่ได้: ข้อมูลอาจถูกอ้างอิงอยู่หรือเกิดข้อผิดพลาด');
         }
+    }
+
+    public function activate(Request $request, Part $part)
+    {
+        if ($part->is_active) return back()->with('ok','รายการนี้เปิดใช้งานอยู่แล้ว');
+
+        $before = Arr::only($part->getAttributes(), ['is_active','deactivated_at']);
+        $part->is_active = true;
+        $part->deactivated_at = null;
+        // ถ้ามีคอลัมน์ updated_by ให้ปลดคอมเมนต์
+        // $part->updated_by = $this->actorId($request);
+        $part->save();
+
+        $after = Arr::only($part->getAttributes(), ['is_active','deactivated_at']);
+
+        $this->logHistory($part, $this->actorId($request), 'activate', $before, $after, ['is_active','deactivated_at']);
+
+        return back()->with('ok','เปิดใช้งานแล้ว');
+    }
+
+    public function deactivate(Request $request, Part $part)
+    {
+        if (!$part->is_active) return back()->with('ok','รายการนี้ถูกปิดใช้งานอยู่แล้ว');
+
+        $before = Arr::only($part->getAttributes(), ['is_active','deactivated_at']);
+        $part->is_active = false;
+        $part->deactivated_at = now();
+        // ถ้ามีคอลัมน์ updated_by ให้ปลดคอมเมนต์
+        // $part->updated_by = $this->actorId($request);
+        $part->save();
+
+        $after = Arr::only($part->getAttributes(), ['is_active','deactivated_at']);
+
+        $this->logHistory($part, $this->actorId($request), 'deactivate', $before, $after, ['is_active','deactivated_at']);
+
+        return back()->with('ok','ปิดใช้งานแล้ว');
+    }
+
+
+
+    ########################################################### History #############
+    
+    public function history(Request $request, Part $part)
+    {
+        $q = \App\Models\PartHistory::where('part_id', $part->id)->with('user');
+
+        if (($action = $request->get('action')) && $action !== 'all') {
+            $q->where('action', $action);
+        }
+        if ($user = trim($request->get('user',''))) {
+            $q->whereHas('user', fn($w) => $w->where('name','like',"%{$user}%"));
+        }
+        if (($field = $request->get('field')) && $field !== 'all') {
+            $q->where(fn($w) =>
+                $w->whereJsonContains('changed_fields',$field)
+                ->orWhere('changed_fields','like','%"'.$field.'"%')
+            );
+        }
+        if ($from = $request->get('from')) $q->whereDate('created_at','>=',$from);
+        if ($to   = $request->get('to'))   $q->whereDate('created_at','<=',$to);
+
+        $perPage   = max(10, min(100, (int)$request->get('per_page',20)));
+        $histories = $q->latest()->paginate($perPage)->withQueryString();
+
+        $actions    = ['create','update','activate','deactivate','delete'];
+        $fieldsList = array_keys([
+            'part_no'=>1,'part_name'=>1,'supplier_name'=>1,'supplier_code'=>1,'supplier'=>1,'pic'=>1,'type'=>1,
+            'location'=>1,'qty_per_box'=>1,'moq'=>1,'item_no'=>1,'unit'=>1,'remark'=>1,'date'=>1,'qr_payload'=>1,
+            'is_active'=>1,'deactivated_at'=>1,'no'=>1,
+        ]);
+
+        return view('parts.history', compact('part','histories','actions','fieldsList'));
+    }
+
+
+
+    #################### setting is_adctive Restore part #######
+    public function settings(\Illuminate\Http\Request $req)
+    {
+        // กรองเบื้องต้น (เลือกได้)
+        $kw = trim($req->get('q', ''));
+
+        $inactive = Part::inactive()
+            ->when($kw, fn($q)=>$q->where(function($w) use ($kw){
+                $w->where('part_no','like',"%{$kw}%")
+                ->orWhere('part_name','like',"%{$kw}%")
+                ->orWhere('supplier_name','like',"%{$kw}%");
+            }))
+            ->orderBy('part_no')
+            ->paginate(20, ['*'], 'inactive_page')
+            ->withQueryString();
+
+        $trashed = Part::onlyTrashed()
+            ->when($kw, fn($q)=>$q->where(function($w) use ($kw){
+                $w->where('part_no','like',"%{$kw}%")
+                ->orWhere('part_name','like',"%{$kw}%")
+                ->orWhere('supplier_name','like',"%{$kw}%");
+            }))
+            ->orderByDesc('deleted_at')
+            ->paginate(20, ['*'], 'trash_page')
+            ->withQueryString();
+
+        return view('parts.settings', compact('inactive','trashed','kw'));
+    }
+
+    public function restore($id)
+    {
+        $part = Part::withTrashed()->findOrFail($id);
+        $part->restore();
+
+        // (ออปชัน) บันทึก part_history ที่นี่ได้
+        // PartHistory::create([... 'action' => 'restore', ...]);
+
+        return back()->with('ok', "กู้คืน {$part->part_no} แล้ว");
+    }
+
+    public function forceDelete($id)
+    {
+        $part = Part::withTrashed()->findOrFail($id);
+        $no = $part->part_no;
+
+        $part->forceDelete();
+
+        // (ออปชัน) บันทึก part_history: action = 'force_delete'
+
+        return back()->with('ok', "ลบถาวร {$no} แล้ว");
     }
 
 

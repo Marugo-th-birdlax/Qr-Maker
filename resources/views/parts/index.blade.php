@@ -6,429 +6,13 @@
 @php
   $u = session('user');
   $role = $u['role'] ?? 'user';
-  $isAdmin = $role === 'admin';
+  $isAdmin = in_array($role, ['admin','pp'], true);
   $canEdit = in_array($role, ['admin','pp','qc'], true);
-  $canDelete = in_array($role, ['admin','pc'], true);
+  $canDelete = in_array($role, ['admin'], true);
+  $canActivate = in_array($role, ['admin','pc'], true);
 @endphp
 
-<style>
-  /* Container */
-  .parts-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 16px;
-  }
 
-  /* Alert Success */
-  .alert-success {
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-    border: 1px solid #a7f3d0;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    color: #065f46;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  /* Filter Card */
-  .filter-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-
-  .filter-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    align-items: end;
-  }
-
-  .filter-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .filter-field label {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6b7280;
-  }
-
-  .filter-field input,
-  .filter-field select {
-    padding: 8px 12px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.15s;
-  }
-
-  .filter-field input:focus,
-  .filter-field select:focus {
-    outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  .filter-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
-
-  /* Buttons */
-  .btn {
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .btn-primary {
-    background: #4f46e5;
-    color: #fff;
-  }
-
-  .btn-primary:hover {
-    background: #4338ca;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
-  }
-
-  .btn-secondary {
-    background: #2563eb;
-    color: #fff;
-  }
-
-  .btn-secondary:hover {
-    background: #1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-  }
-
-  .btn-success {
-    background: #10b981;
-    color: #fff;
-  }
-
-  .btn-success:hover {
-    background: #059669;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
-  }
-
-  .btn-edit {
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: #2563eb;
-    color: #fff;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.15s;
-  }
-
-  .btn-edit:hover {
-    background: #1d4ed8;
-  }
-
-  .btn-delete {
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: #fee2e2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.15s;
-  }
-
-  .btn-delete:hover {
-    background: #fecaca;
-  }
-
-  .btn-qr {
-    padding: 6px 12px;
-    border-radius: 6px;
-    background: #4f46e5;
-    color: #fff;
-    text-decoration: none;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.15s;
-  }
-
-  .btn-qr:hover {
-    background: #4338ca;
-  }
-
-  /* Table Card */
-  .table-card {
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  }
-
-  .table-wrap {
-    overflow-x: auto;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    margin-top: 12px;
-  }
-
-  .parts-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px;
-  }
-
-  .parts-table thead {
-    background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .parts-table th {
-    padding: 12px 10px;
-    text-align: left;
-    font-weight: 700;
-    font-size: 12px;
-    color: #374151;
-    border-bottom: 2px solid #e5e7eb;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .parts-table td {
-    padding: 12px 10px;
-    border-bottom: 1px solid #f3f4f6;
-    font-size: 13px;
-  }
-
-  /* Main Row (คลิกได้) */
-  .main-row {
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .main-row:hover {
-    background: #f9fafb;
-  }
-
-  .main-row.expanded {
-    background: #eff6ff;
-    box-shadow: inset 0 0 0 1px #93c5fd;
-  }
-
-  /* Expand Icon */
-  .expand-icon {
-    display: inline-block;
-    transition: transform 0.2s;
-    font-size: 14px;
-    color: #6b7280;
-    width: 20px;
-    text-align: center;
-  }
-
-  .main-row.expanded .expand-icon {
-    transform: rotate(90deg);
-    color: #4f46e5;
-  }
-
-  /* Detail Row */
-  .detail-row {
-    display: none;
-    background: #f8fafc;
-  }
-
-  .detail-row.show {
-    display: table-row;
-    animation: slideDown 0.2s ease-out;
-  }
-
-  @keyframes slideDown {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .detail-cell {
-    padding: 20px !important;
-    border-bottom: 2px solid #e5e7eb !important;
-  }
-
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px 24px;
-  }
-
-  .detail-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .detail-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #6b7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .detail-value {
-    font-size: 14px;
-    color: #111827;
-    font-weight: 500;
-  }
-
-  /* Badge */
-  .badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 700;
-    background: #e0e7ff;
-    color: #4338ca;
-    letter-spacing: 0.3px;
-  }
-
-  /* Part No Style */
-  .part-no {
-    font-weight: 700;
-    color: #1e40af;
-  }
-
-  /* Action Buttons */
-  .action-btns {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  /* Footer Actions */
-  .footer-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid #e5e7eb;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  /* Empty State */
-  .empty-state {
-    padding: 60px 20px;
-    text-align: center;
-    color: #9ca3af;
-  }
-
-  .empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-    opacity: 0.5;
-  }
-
-  /* Responsive */
-  @media (max-width: 1024px) {
-    .parts-container {
-      padding: 12px;
-    }
-
-    .filter-form {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    }
-
-    .parts-table {
-      min-width: 800px;
-    }
-
-    .detail-grid {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px 20px;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .filter-form {
-      grid-template-columns: 1fr;
-    }
-
-    .filter-actions {
-      flex-direction: column;
-    }
-
-    .filter-actions .btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .parts-table th,
-    .parts-table td {
-      font-size: 12px;
-      padding: 10px 6px;
-    }
-
-    .detail-grid {
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-
-    .action-btns {
-      flex-direction: column;
-      width: 100%;
-    }
-
-    .action-btns a {
-      width: 100%;
-      text-align: center;
-      justify-content: center;
-    }
-
-    .footer-actions {
-      flex-direction: column;
-      align-items: stretch;
-    }
-
-    .footer-actions button {
-      width: 100%;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .parts-table {
-      min-width: 700px;
-    }
-  }
-</style>
 
 <div class="parts-container">
   {{-- Success Alert --}}
@@ -571,6 +155,28 @@
                       🗑️ ลบ
                     </a>
                   @endif
+
+                {{-- ปุ่มเปิด/ปิดการใช้งาน (admin, pแ เท่านั้น) --}}
+                @if ($canActivate)
+                  @if ($p->is_active)
+                    <button type="button"
+                            class="btn-edit"
+                            onclick="confirmToggle('{{ route('parts.deactivate', $p) }}', 'ปิดใช้งาน {{ $p->part_no }} ?')">
+                      ปิดใช้งาน
+                    </button>
+                  @else
+                    <button type="button"
+                            class="btn-success"
+                            onclick="confirmToggle('{{ route('parts.activate', $p) }}', 'เปิดใช้งาน {{ $p->part_no }} ?')">
+                      เปิดใช้งาน
+                    </button>
+                  @endif
+                @endif
+
+
+      
+
+                  
                 </div>
               </td>
             </tr>
@@ -680,3 +286,39 @@
   });
 </script>
 @endsection
+
+
+
+
+<script>
+  // --- CSRF token สำหรับ fetch ---
+  const CSRF_TOKEN = @json(csrf_token());
+
+  async function confirmToggle(url, msg){
+    if(!confirm(msg)) return;
+
+    try{
+      const res = await fetch(url, {
+        method: 'POST',              // Laravel ต้องการ POST + _method=PATCH
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': CSRF_TOKEN,
+          'Accept': 'application/json, text/html, */*',
+        },
+        body: JSON.stringify({ _method: 'PATCH' })
+      });
+
+      // สำเร็จให้ reload เพื่อให้สถานะ/ปุ่มอัปเดต
+      if (res.ok) {
+        location.reload();
+      } else {
+        // เผื่อ backend redirect (302) หรือ validation
+        // ถ้าไม่ได้เป็น ok แต่ server ส่ง html กลับมา ให้ force reload
+        location.reload();
+      }
+    } catch (e){
+      alert('เกิดข้อผิดพลาด ไม่สามารถอัปเดตสถานะได้');
+      console.error(e);
+    }
+  }
+</script>

@@ -11,7 +11,7 @@
 
     $u    = session('user');
     $role = data_get($u, 'role', 'user');
-    $canSeeSettings = in_array($role, ['admin','pc'], true);
+    $canSeeSettings = in_array($role, ['admin'], true);
 
     $pendingCount = $pendingCount ?? 0;
 

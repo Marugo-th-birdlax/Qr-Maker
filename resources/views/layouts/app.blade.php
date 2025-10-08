@@ -7,7 +7,11 @@
 
   {{-- โหลดไฟล์ผ่าน Vite (dev/build) --}}
   @vite([
-    'resources/js/app.js',    // ใน app.js จะ import layout.js (ดูข้อ 2)
+    'resources/js/app.js',  
+    'resources/css/parts.css', 
+    'resources/css/app.css',
+    'resources/css/history.css',
+    'resources/css/home.css',
   ])
 
   @stack('styles')

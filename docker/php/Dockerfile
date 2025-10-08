@@ -12,7 +12,16 @@ FROM php:8.2-apache
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Timezone + build deps + dev libs ที่จำเป็นต่อการคอมไพล์ ext ต่างๆ
+# แก้ source ให้ใช้ HTTPS ทั้งแบบ .list และ .sources
+RUN set -eux; \
+    if [ -f /etc/apt/sources.list ]; then \
+      sed -i -E 's|http://deb\.debian\.org|https://deb.debian.org|g' /etc/apt/sources.list; \
+    fi; \
+    if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+      sed -i -E 's|http://deb\.debian\.org|https://deb.debian.org|g' /etc/apt/sources.list.d/debian.sources; \
+    fi
+
+# ต่อด้วยเดิมของคุณ
 RUN apt-get update && apt-get install -y \
     tzdata git unzip pkg-config \
     libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
@@ -20,10 +29,8 @@ RUN apt-get update && apt-get install -y \
  && ln -fs /usr/share/zoneinfo/Asia/Bangkok /etc/localtime \
  && dpkg-reconfigure -f noninteractive tzdata \
  && echo "date.timezone=Asia/Bangkok" > /usr/local/etc/php/conf.d/timezone.ini \
- # เปิด option ให้ gd รองรับ jpeg/freetype
  && docker-php-ext-configure gd --with-freetype --with-jpeg \
- # คอมไพล์ php extensions (มี -j$(nproc) ให้เร็วขึ้น)
- && docker-php-ext-install -j$(nproc) pdo_mysql gd zip intl opcache mbstring \
+ && docker-php-ext-install -j"$(nproc)" pdo_mysql gd zip intl opcache mbstring \
  && a2enmod rewrite headers \
  && rm -rf /var/lib/apt/lists/*
 

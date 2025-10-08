@@ -5,7 +5,7 @@
 @php
   $u = session('user');
   $role = $u['role'] ?? 'user';
-  $canManageTrash = in_array($role, ['admin','pc'], true);
+  $canManageTrash = in_array($role, ['admin'], true);
 @endphp
 
 @if (session('ok'))

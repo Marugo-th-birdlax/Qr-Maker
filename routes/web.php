@@ -65,7 +65,7 @@ Route::prefix('parts')->name('parts.')->group(function () {
     });
 });
 
-Route::prefix('settings')->name('settings.')->middleware(['auth.session','role:admin,pc'])->group(function () {
+Route::prefix('settings')->name('settings.')->middleware(['auth.session','role:admin'])->group(function () {
     Route::get('/',                   [PartController::class,'settings'])->name('index');
     Route::patch('trash/{id}/restore',[PartController::class,'restore'])->name('restore')->whereNumber('id');
     Route::delete('trash/{id}/force', [PartController::class,'forceDelete'])->name('force')->whereNumber('id');

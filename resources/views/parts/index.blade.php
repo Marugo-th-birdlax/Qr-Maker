@@ -78,7 +78,7 @@
 
         @if ($isAdmin)
           <a href="{{ route('parts.create') }}" class="btn btn-secondary">
-            ➕ เพิ่มข้อมูล
+            ➕ New Part
           </a>
           <a href="{{ route('parts.import.form') }}" class="btn btn-success">
             📥 Import CSV
@@ -93,7 +93,7 @@
     @csrf
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <h3 style="margin:0; font-size:18px; color:#111827;">📦 รายการ Parts</h3>
+      <h3 style="margin:0; font-size:18px; color:#111827;">📦 List Parts</h3>
       <span style="font-size:13px; color:#6b7280;">คลิกแถวเพื่อดูรายละเอียด</span>
     </div>
 
@@ -152,7 +152,7 @@
 
                   @if ($canDelete)
                     <a href="{{ route('parts.delete.confirm', $p) }}" class="btn-delete">
-                      🗑️ ลบ
+                      🗑️ Delete
                     </a>
                   @endif
 
@@ -160,15 +160,15 @@
                 @if ($canActivate)
                   @if ($p->is_active)
                     <button type="button"
-                            class="btn-edit"
+                            class="btn-deactivate"
                             onclick="confirmToggle('{{ route('parts.deactivate', $p) }}', 'ปิดใช้งาน {{ $p->part_no }} ?')">
-                      ปิดใช้งาน
+                      Disabled
                     </button>
                   @else
                     <button type="button"
                             class="btn-success"
                             onclick="confirmToggle('{{ route('parts.activate', $p) }}', 'เปิดใช้งาน {{ $p->part_no }} ?')">
-                      เปิดใช้งาน
+                      Enabled
                     </button>
                   @endif
                 @endif

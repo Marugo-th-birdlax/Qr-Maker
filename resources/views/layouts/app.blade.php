@@ -12,6 +12,7 @@
     'resources/css/app.css',
     'resources/css/history.css',
     'resources/css/home.css',
+    'resources/css/report.css',
   ])
 
   @stack('styles')

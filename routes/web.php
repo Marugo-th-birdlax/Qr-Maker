@@ -62,6 +62,7 @@ Route::prefix('parts')->name('parts.')->group(function () {
             ->name('delete.confirm')->whereNumber('part');
         Route::delete('{part}', [PartController::class,'destroy'])
             ->name('destroy')->whereNumber('part');
+        Route::patch('{part}/deactivate',[PartController::class,'deactivate'])->name('deactivate')->whereNumber('part');
     });
 });
 

@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/parts.css', 
                 'resources/css/history.css',
                 'resources/css/home.css',
+                'resources/css/report.css',
             ],
             refresh: true,
         }),
